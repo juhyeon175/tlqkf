@@ -1,0 +1,87 @@
+import streamlit as st
+import random
+import time
+
+# 페이지 설정
+st.set_page_config(page_title="타노스의 인피니티 건틀렛", page_icon="💎")
+
+st.title("🔮 타노스의 인피니티 스톤 수집기")
+st.write("모든 인피니티 스톤을 모아 손가락을 튕겨보세요!")
+
+# 인피니티 스톤 목록 및 정보
+STONES = {
+    "Space Stone": {"color": "🔵 Blue", "icon": "🔵"},
+    "Mind Stone": {"color": "🟡 Yellow", "icon": "🟡"},
+    "Reality Stone": {"color": "🔴 Red", "icon": "🔴"},
+    "Power Stone": {"color": "🟣 Purple", "icon": "🟣"},
+    "Time Stone": {"color": "🟢 Green", "icon": "🟢"},
+    "Soul Stone": {"color": "🟠 Orange", "icon": "🟠"}
+}
+
+# 세션 상태 초기화
+if "inventory" not in st.state_history if hasattr(st, "state_history") else "inventory" not in st.session_state:
+    st.session_state.inventory = []
+if "snapped" not in st.session_state:
+    st.session_state.snapped = False
+
+# 게임 리셋 함수
+def reset_game():
+    st.session_state.inventory = []
+    st.session_state.snapped = False
+
+# 현재 보유한 스톤 상태 표시
+st.subheader("🥊 인피니티 건틀렛 상태")
+
+col_gauntlet = st.columns(6)
+for idx, (stone_name, details) in enumerate(STONES.items()):
+    with col_gauntlet[idx]:
+        if stone_name in st.session_state.inventory:
+            st.markdown(f"### {details['icon']}")
+            st.caption(stone_name.split()[0])
+        else:
+            st.markdown("### ⚪")
+            st.caption("Empty")
+
+st.markdown("---")
+
+# 액션 영역
+if not st.session_state.snapped:
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # 스톤 탐색 버튼
+        if len(st.session_state.inventory) < 6:
+            if st.button("🔍 우주 탐색하기 (스톤 찾기)"):
+                # 아직 모으지 못한 스톤 추출
+                remaining_stones = [s for s in STONES.keys() if s not in st.session_state.inventory]
+                found_stone = random.choice(remaining_stones)
+                
+                st.session_state.inventory.append(found_stone)
+                st.success(f"새로운 스톤을 찾았습니다: **{found_stone}** ({STONES[found_stone]['color']})!")
+                st.rerun()
+        else:
+            st.info("모든 스톤을 장착했습니다! 핑거스냅을 할 준비가 되었습니다.")
+
+    with col2:
+        # 핑거스냅 버튼
+        if len(st.session_state.inventory) == 6:
+            if st.button("🤌 핑거스냅하기!!"):
+                st.session_state.snapped = True
+                st.rerun()
+
+# 핑거스냅 연출
+if st.session_state.snapped:
+    st.error("💥 *SNAP!* 💥")
+    st.image("https://media.giphy.com/media/xUOxeZn47mrdabTcg0/giphy.gif", caption="우주의 절반이 사라집니다...")
+    
+    # 50% 확률 연출 효과
+    time.sleep(1)
+    if random.choice([True, False]):
+        st.write("🌌 당신은 살아남았습니다.")
+    else:
+        st.write("💨 당신은 먼지가 되어 사라졌습니다...")
+        
+    st.button("🔄 처음부터 다시 하기", on_click=reset_game)
+
+# 게임 리셋 버튼 (언제든 가동)
+st.sidebar.button("게임 초기화", on_click=reset_game)
